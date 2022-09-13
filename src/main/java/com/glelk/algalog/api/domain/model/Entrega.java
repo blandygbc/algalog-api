@@ -13,12 +13,6 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.validation.groups.ConvertGroup;
-import javax.validation.groups.Default;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonProperty.Access;
-import com.glelk.algalog.api.domain.interfaces.ValidationGroups;
 
 @Entity
 public class Entrega {
@@ -28,7 +22,6 @@ public class Entrega {
     private Long id;
 
     @Valid
-    @ConvertGroup(from = Default.class, to = ValidationGroups.ClienteId.class)
     @NotNull
     @ManyToOne
     private Cliente cliente;
@@ -41,14 +34,11 @@ public class Entrega {
     @NotNull
     private BigDecimal taxa;
 
-    @JsonProperty(access = Access.READ_ONLY)
     @Enumerated(EnumType.STRING)
     private StatusEntrega status;
 
-    @JsonProperty(access = Access.READ_ONLY)
     private OffsetDateTime dataPedido;
 
-    @JsonProperty(access = Access.READ_ONLY)
     private OffsetDateTime dataFinalizacao;
 
     public Long getId() {
