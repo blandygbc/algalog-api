@@ -17,9 +17,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.glelk.algalog.api.assembler.ClienteAssembler;
 import com.glelk.algalog.api.domain.model.Cliente;
 import com.glelk.algalog.api.domain.repository.ClienteRepository;
 import com.glelk.algalog.api.domain.service.CatalogoClienteService;
+import com.glelk.algalog.api.model.ClienteModel;
+import com.glelk.algalog.api.model.input.ClienteInputModel;
 
 @RestController
 @RequestMapping("/clientes")
@@ -29,33 +32,38 @@ public class ClienteController {
     private ClienteRepository clienteRepository;
     @Autowired
     private CatalogoClienteService catalogoClienteService;
+    @Autowired
+    private ClienteAssembler clienteAssembler;
 
     @GetMapping
-    public List<Cliente> listar() {
-        return clienteRepository.findAll();
+    public List<ClienteModel> listar() {
+        return clienteAssembler.toCollectionModel(clienteRepository.findAll());
     }
 
     @GetMapping("/{clienteId}")
-    public ResponseEntity<Cliente> buscarCliente(@PathVariable Long clienteId) {
+    public ResponseEntity<ClienteModel> buscarCliente(@PathVariable Long clienteId) {
         return clienteRepository.findById(clienteId)
-                .map(ResponseEntity::ok)
+                .map(cliente -> ResponseEntity.ok(clienteAssembler.toModel(cliente)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Cliente adicionarCliente(@Valid @RequestBody Cliente cliente) {
+    public Cliente adicionarCliente(@Valid @RequestBody ClienteInputModel clienteInputModel) {
+        Cliente cliente = clienteAssembler.toEntity(clienteInputModel);
         return catalogoClienteService.salvar(cliente);
     }
 
     @PutMapping("/{clienteId}")
-    public ResponseEntity<Cliente> atualizarCliente(@PathVariable Long clienteId, @Valid @RequestBody Cliente cliente) {
+    public ResponseEntity<ClienteModel> atualizarCliente(@PathVariable Long clienteId,
+            @Valid @RequestBody ClienteInputModel clienteInputModel) {
         if (!clienteRepository.existsById(clienteId)) {
             return ResponseEntity.notFound().build();
         }
+        Cliente cliente = clienteAssembler.toEntity(clienteInputModel);
         cliente.setId(clienteId);
-        cliente = catalogoClienteService.salvar(cliente);
-        return ResponseEntity.ok(cliente);
+        ClienteModel clienteModel = clienteAssembler.toModel(catalogoClienteService.salvar(cliente));
+        return ResponseEntity.ok(clienteModel);
     }
 
     @DeleteMapping("/{clienteId}")
